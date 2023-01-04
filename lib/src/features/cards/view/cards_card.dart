@@ -28,6 +28,10 @@ class _CardState extends State<Card> with TickerProviderStateMixin {
   late AnimationController controller;
 
   void handleCardAnimation() async {
+    if (controller.isAnimating) {
+      return;
+    }
+
     if (widget.isflipped) {
       await controller.forward();
       return;
