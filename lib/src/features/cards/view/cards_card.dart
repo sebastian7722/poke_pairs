@@ -1,21 +1,26 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
 
 import 'cards_card_back.dart';
 import 'cards_card_front.dart';
+import 'cards_card_model.dart';
 
 class Card extends StatefulWidget {
   final int id;
   final CardFront cardFront;
-  final bool isflipped;
+  final bool isFlipped;
   final bool isFlippable;
+  final bool hasPair;
   final void Function(int) onTap;
 
   const Card({
     required this.id,
     required this.cardFront,
-    required this.isflipped,
+    required this.isFlipped,
     required this.isFlippable,
+    required this.hasPair,
     required this.onTap,
     super.key,
   });
@@ -26,34 +31,55 @@ class Card extends StatefulWidget {
 
 class _CardState extends State<Card> with TickerProviderStateMixin {
   late AnimationController controller;
+  bool cardflipToFrontDone = false;
 
-  void handleCardAnimation() async {
-    if (controller.isAnimating) {
-      return;
-    }
-
-    if (widget.isflipped) {
+  void handleCardAnimation(CardsModel provider) async {
+    if (controller.isAnimating) return;
+    if (widget.isFlipped) {
+      final animatingFrom = controller.value;
+      print('animation start ${controller.value}');
       await controller.forward();
-      return;
+      print('animation ends ${controller.value}');
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (animatingFrom != 1) {
+          print('animation ends postframe ${controller.value}');
+          provider.flipToFrontDone();
+        }
+      });
+    } else {
+      await controller.reverse();
     }
-
-    await controller.reverse();
   }
 
   @override
   void initState() {
     super.initState();
+    print('object finished building?');
+    //final cardsProvider = Provider.of<CardsModel>(context, listen: false);
     controller = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    handleCardAnimation();
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      print('object finished building? SCHEDULER');
+    });
+    //handleCardAnimation(cardsProvider);
   }
 
   @override
   void didUpdateWidget(covariant Card oldWidget) {
+    print('widget updated');
     super.didUpdateWidget(oldWidget);
-    handleCardAnimation();
+    final cardsProvider = Provider.of<CardsModel>(context, listen: false);
+    handleCardAnimation(cardsProvider);
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    print('changed deps');
   }
 
   @override
@@ -66,6 +92,7 @@ class _CardState extends State<Card> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
+        if (controller.isAnimating) return;
         widget.onTap(widget.id);
       },
       child: AnimatedBuilder(
@@ -75,11 +102,12 @@ class _CardState extends State<Card> with TickerProviderStateMixin {
           final transform = Matrix4.identity()
             ..setEntry(3, 2, 0.001)
             ..rotateY(angle);
+          final hasTurnedToFront = !isBack(angle.abs());
 
           return Transform(
             transform: transform,
             alignment: Alignment.center,
-            child: isBack(angle.abs())
+            child: !hasTurnedToFront
                 ? const CardBack()
                 : Transform(
                     transform: Matrix4.identity()..rotateY(pi),

@@ -229,13 +229,14 @@ class GameResourcesLoader extends StatelessWidget {
           return Card(
             id: i,
             cardFront: CardFront(val),
-            isflipped: false,
+            isFlipped: false,
             isFlippable: true,
+            hasPair: false,
             onTap: (int id) {
               Provider.of<CardsModel>(context, listen: false).flipCard(id);
             },
           );
-        }).toList();
+        });
 
         Provider.of<CardsModel>(context, listen: false).initCards(cards);
 
