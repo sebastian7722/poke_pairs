@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:poke_pairs/src/shared/classes/pokemon.dart';
 
-class CardFront extends StatelessWidget {
+class CardBack extends StatelessWidget {
   final Pokemon pokemon;
 
-  const CardFront(this.pokemon, {super.key});
+  const CardBack({required this.pokemon, super.key});
 
   @override
   Widget build(BuildContext context) {

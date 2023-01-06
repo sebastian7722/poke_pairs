@@ -226,9 +226,10 @@ class GameResourcesLoader extends StatelessWidget {
         final cards = pokemons.asMap().entries.map((e) {
           final i = e.key;
           final val = e.value;
-          return Card(
+          return PokemonCard(
             id: i,
-            cardFront: CardFront(val),
+            cardBack: CardBack(pokemon: val),
+            isScheduledForFlip: false,
             isFlipped: false,
             isFlippable: true,
             hasPair: false,

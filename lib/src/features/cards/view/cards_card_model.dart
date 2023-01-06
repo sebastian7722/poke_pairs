@@ -1,108 +1,73 @@
 import 'dart:collection';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'cards_card.dart';
 
 class CardsModel extends ChangeNotifier {
-  final List<Card> _items = [];
+  final List<PokemonCard> _items = [];
   var _flips = 0;
 
-  UnmodifiableListView<Card> get items => UnmodifiableListView(_items);
+  UnmodifiableListView<PokemonCard> get items => UnmodifiableListView(_items);
   int get flips => _flips;
 
-  void initCards(Iterable<Card> cards) {
+  void initCards(Iterable<PokemonCard> cards) {
     _items.clear();
     _items.addAll(cards);
   }
 
-  List<Card> _getPossiblePairs() {
-    return _items.where((card) => card.isFlipped && !card.hasPair).toList();
-  }
-
-  void _restoreFlipOnNonPairCards() {
-    final restoredCards =
-        _items.where((element) => !element.hasPair).map((e) => Card(
-              id: e.id,
-              cardFront: e.cardFront,
-              isFlipped: false,
-              isFlippable: true,
-              hasPair: e.hasPair,
-              onTap: e.onTap,
-            ));
-
-    for (var element in restoredCards) {
-      final elementIndex = _items.indexWhere((y) => y.id == element.id);
-      _items[elementIndex] = element;
-    }
-  }
-
   void flipCard(int id) {
     final cardIndex = _items.indexWhere((element) => element.id == id);
-    final card = _items[cardIndex];
-    if (!card.isFlippable || card.hasPair) return;
+    if (!_items[cardIndex].isFlippable || _items[cardIndex].hasPair) return;
 
-    final updatedCard = Card(
-      id: card.id,
-      cardFront: card.cardFront,
-      isFlippable: false,
-      isFlipped: true,
-      hasPair: card.hasPair,
-      onTap: card.onTap,
-    );
-    _items[cardIndex] = updatedCard;
+    for (var i = 0; i < _items.length; i++) {
+      if (cardIndex == i) {
+        _items[i] = _items[i].copyWith(
+          isScheduledForFlip: true,
+          isFlippable: false,
+          isFlipped: true,
+        );
+        continue;
+      }
 
-    if (_getPossiblePairs().length == 2) {
-      final newCards = _items
-          .map((e) => Card(
-              id: e.id,
-              cardFront: e.cardFront,
-              isFlipped: e.isFlipped,
-              isFlippable: false,
-              hasPair: e.hasPair,
-              onTap: e.onTap))
-          .toList();
-
-      _items.clear();
-      _items.addAll(newCards);
+      _items[i] = _items[i].copyWith(isFlippable: false);
     }
 
     notifyListeners();
   }
 
-  void flipToFrontDone() {
-    print('flipped to front');
-    final possiblePair = _getPossiblePairs();
-    if (possiblePair.length != 2) return;
+  void flipToBackDone() {
+    final cardIndex =
+        _items.indexWhere((element) => element.isScheduledForFlip);
 
-    if (possiblePair[0].cardFront.pokemon.name ==
-        possiblePair[1].cardFront.pokemon.name) {
-      final updatedFirstCardIndex =
-          _items.indexWhere((element) => element.id == possiblePair[0].id);
-      final updatedFirstCard = Card(
-        id: possiblePair[0].id,
-        cardFront: possiblePair[0].cardFront,
-        isFlippable: possiblePair[0].isFlippable,
-        isFlipped: possiblePair[0].isFlipped,
-        hasPair: true,
-        onTap: possiblePair[0].onTap,
-      );
-      final updatedSecondCardIndex =
-          _items.indexWhere((element) => element.id == possiblePair[1].id);
-      final updatedSecondCard = Card(
-        id: possiblePair[1].id,
-        cardFront: possiblePair[1].cardFront,
-        isFlippable: possiblePair[1].isFlippable,
-        isFlipped: possiblePair[1].isFlipped,
-        hasPair: true,
-        onTap: possiblePair[1].onTap,
-      );
+    for (var i = 0; i < _items.length; i++) {
+      if (cardIndex == i) {
+        _items[i] = _items[i].copyWith(
+          isScheduledForFlip: false,
+        );
+        continue;
+      }
 
-      _items[updatedFirstCardIndex] = updatedFirstCard;
-      _items[updatedSecondCardIndex] = updatedSecondCard;
+      _items[i] = _items[i].copyWith(isFlippable: true);
     }
 
-    _restoreFlipOnNonPairCards();
+    final possiblePair = _items
+        .where((element) => !element.hasPair && element.isFlipped)
+        .toList();
+    if (possiblePair.length != 2) return;
+    final firstIndex =
+        _items.indexWhere((element) => element.id == possiblePair[0].id);
+    final secondIndex =
+        _items.indexWhere((element) => element.id == possiblePair[1].id);
+    if (possiblePair[0].cardBack.pokemon.name ==
+        possiblePair[1].cardBack.pokemon.name) {
+      _items[firstIndex] = _items[firstIndex].copyWith(hasPair: true);
+      _items[secondIndex] = _items[secondIndex].copyWith(hasPair: true);
+    } else {
+      _items[firstIndex] = _items[firstIndex].copyWith(isFlipped: false);
+      _items[secondIndex] = _items[secondIndex].copyWith(isFlipped: false);
+    }
 
     _flips++;
     notifyListeners();

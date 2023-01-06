@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-class CardBack extends StatelessWidget {
-  const CardBack({super.key});
+class CardFront extends StatelessWidget {
+  const CardFront({super.key});
 
   @override
   Widget build(BuildContext context) {
