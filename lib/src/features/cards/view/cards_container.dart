@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' hide Card;
-import 'package:poke_pairs/src/features/cards/view/cards_card_model.dart';
+import 'package:poke_pairs/src/shared/classes/game_model.dart';
 import 'package:provider/provider.dart';
 
 class CardsContainer extends StatelessWidget {
@@ -9,7 +9,7 @@ class CardsContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CardsModel>(
+    return Consumer<GameModel>(
       builder: (context, state, child) => GridView.count(
         crossAxisCount: 4,
         crossAxisSpacing: _gridSpacing,

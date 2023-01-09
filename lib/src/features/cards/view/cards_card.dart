@@ -5,7 +5,7 @@ import 'cards_card_back.dart';
 import 'cards_card_front.dart';
 import 'dart:math' as math;
 
-import 'cards_card_model.dart';
+import '../../../shared/classes/game_model.dart';
 
 class PokemonCard extends StatefulWidget {
   final int id;
@@ -84,8 +84,7 @@ class _PokemonCardState extends State<PokemonCard> {
           if (rotateAnim.isCompleted &&
               this.widget.isFlipped &&
               this.widget.isScheduledForFlip) {
-            print('somghints');
-            Provider.of<CardsModel>(context, listen: false).flipToBackDone();
+            Provider.of<GameModel>(context, listen: false).flipToBackDone();
           }
         });
 

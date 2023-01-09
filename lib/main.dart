@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart' hide Card;
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:poke_pairs/src/shared/classes/list_extension.dart';
 import 'package:poke_pairs/src/shared/classes/pokemon.dart';
 import 'package:poke_pairs/src/shared/classes/pokemon_loading.dart';
@@ -8,7 +9,7 @@ import 'package:provider/provider.dart';
 
 import 'src/features/cards/view/cards_card.dart';
 import 'src/features/cards/view/cards_card_front.dart';
-import 'src/features/cards/view/cards_card_model.dart';
+import 'src/shared/classes/game_model.dart';
 import 'src/shared/game.dart';
 import 'src/shared/views/views.dart';
 
@@ -21,8 +22,11 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: GameNavigation(),
+    return MaterialApp(
+      home: ChangeNotifierProvider(
+        create: (context) => (GameModel()),
+        child: const GameNavigation(),
+      ),
     );
   }
 }
@@ -45,10 +49,6 @@ class _GameNavigationState extends State<GameNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    // void gameOver() {
-    //   Navigator.of(context).pop();
-    // }
-
     return FutureBuilder<PokemonResourceList>(
       future: futurePokemonUrls,
       builder: (context, snapshot) {
@@ -57,19 +57,27 @@ class _GameNavigationState extends State<GameNavigation> {
         }
 
         void startHandler() {
+          final viewModel = Provider.of<GameModel>(context, listen: false);
           final pokemonUrls = snapshot.data!.results.map((e) => e.url).toList();
 
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => ChangeNotifierProvider(
-                create: (context) => CardsModel(),
-                child: GameResourceListLoader(pokemonUrls: pokemonUrls),
-              ),
+              builder: (context) => ChangeNotifierProvider.value(
+                  value: viewModel,
+                  child: GameResourceListLoader(pokemonUrls: pokemonUrls)),
             ),
           );
         }
 
-        return Menu(startHandler: startHandler);
+        return Consumer<GameModel>(builder: (context, value, child) {
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            if (value.gameIsOver && Navigator.canPop(context)) {
+              Navigator.of(context).pop();
+            }
+          });
+
+          return Menu(startHandler: startHandler);
+        });
       },
     );
   }
@@ -168,29 +176,6 @@ class _GameResourceListLoaderState extends State<GameResourceListLoader> {
   }
 }
 
-class GameInvalidResourcesReloader extends StatelessWidget {
-  final List<String> resourceUrls;
-
-  const GameInvalidResourcesReloader({
-    required this.resourceUrls,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: Future.delayed(const Duration(seconds: 1)),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Loader();
-        }
-
-        return Container();
-      },
-    );
-  }
-}
-
 class GameResourcesLoader extends StatelessWidget {
   final List<PokemonImageLoading> loadingPokemons;
 
@@ -234,12 +219,12 @@ class GameResourcesLoader extends StatelessWidget {
             isFlippable: true,
             hasPair: false,
             onTap: (int id) {
-              Provider.of<CardsModel>(context, listen: false).flipCard(id);
+              Provider.of<GameModel>(context, listen: false).flipCard(id);
             },
           );
         });
 
-        Provider.of<CardsModel>(context, listen: false).initCards(cards);
+        Provider.of<GameModel>(context, listen: false).init(cards);
 
         return const Game();
       },

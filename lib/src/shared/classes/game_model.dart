@@ -3,16 +3,26 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-import 'cards_card.dart';
+import '../../features/cards/view/cards_card.dart';
 
-class CardsModel extends ChangeNotifier {
+class GameModel extends ChangeNotifier {
   final List<PokemonCard> _items = [];
-  var _flips = 0;
+  var _gameIsOver = false;
+  String? _gameResult;
+  late int _time;
+  late int _flips;
 
   UnmodifiableListView<PokemonCard> get items => UnmodifiableListView(_items);
+  int get time => _time;
   int get flips => _flips;
+  bool get gameIsOver => _gameIsOver;
+  String? get gameResult => _gameResult;
 
-  void initCards(Iterable<PokemonCard> cards) {
+  void init(Iterable<PokemonCard> cards) {
+    _gameIsOver = false;
+    _gameResult = null;
+    _time = 60;
+    _flips = 0;
     _items.clear();
     _items.addAll(cards);
   }
@@ -70,6 +80,25 @@ class CardsModel extends ChangeNotifier {
     }
 
     _flips++;
+    notifyListeners();
+
+    if (_items.every((element) => element.hasPair)) {
+      Future.delayed(const Duration(seconds: 1)).then((_) {
+        _gameIsOver = true;
+        _gameResult = "VICTORY";
+        notifyListeners();
+      });
+    }
+  }
+
+  decrementTime() {
+    if (_time == 0) {
+      _gameIsOver = true;
+      _gameResult = "DEFEATED";
+    } else {
+      _time--;
+    }
+
     notifyListeners();
   }
 }

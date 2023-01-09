@@ -1,5 +1,10 @@
 name: poke_pairs
-description: A new Flutter project.
+description: Mix or match pokemon pairs game.
+
+flutter_icons:
+  image_path: "assets/icon/icon.png"
+  android: true
+  ios: true
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -40,6 +45,7 @@ dependencies:
   provider: ^6.0.5
 
 dev_dependencies:
+  flutter_launcher_icons: "^0.11.0"
   flutter_test:
     sdk: flutter
 
