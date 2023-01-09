@@ -75,8 +75,10 @@ class GameModel extends ChangeNotifier {
       _items[firstIndex] = _items[firstIndex].copyWith(hasPair: true);
       _items[secondIndex] = _items[secondIndex].copyWith(hasPair: true);
     } else {
-      _items[firstIndex] = _items[firstIndex].copyWith(isFlipped: false);
-      _items[secondIndex] = _items[secondIndex].copyWith(isFlipped: false);
+      _items[firstIndex] =
+          _items[firstIndex].copyWith(isFlipped: false, isFlippable: true);
+      _items[secondIndex] =
+          _items[secondIndex].copyWith(isFlipped: false, isFlippable: true);
     }
 
     _flips++;
@@ -84,6 +86,7 @@ class GameModel extends ChangeNotifier {
 
     if (_items.every((element) => element.hasPair)) {
       Future.delayed(const Duration(seconds: 1)).then((_) {
+        if (_gameIsOver) return;
         _gameIsOver = true;
         _gameResult = "VICTORY";
         notifyListeners();
